@@ -1,85 +1,37 @@
-import os
+# test.py
+
 import torch
-from torchvision import transforms
-from PIL import Image
-from network import UNetResNet
+from loader import VITONDataset
+from torch.utils.data import DataLoader
+from network import GeneratorUNet
+from segmentation import SegmentationNet
+from cloth_parser import ClothParser
+from composite import composite
+from export import save_image
+from config import Config
 
-# -------------------------
-# 1️⃣  CONFIG
-# -------------------------
+def main():
+    model = GeneratorUNet().to(Config.device)
+    seg_net = SegmentationNet().to(Config.device)
+    cloth_net = ClothParser().to(Config.device)
 
-class Config:
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    checkpoint_path = "./checkpoints/model_epoch_50.pth"  # Adjust epoch if needed
-    output_dir = "./outputs"
-    test_data = "./data/test"  # folder with 'person' and 'clothes'
-
-    os.makedirs(output_dir, exist_ok=True)
-
-
-# -------------------------
-# 2️⃣  LOAD MODEL
-# -------------------------
-
-def load_model():
-    model = UNetResNet().to(Config.device)
-    model.load_state_dict(torch.load(Config.checkpoint_path, map_location=Config.device))
+    model.load_state_dict(torch.load("checkpoints/model_final.pth"))
     model.eval()
-    return model
 
+    dataset = VITONDataset(Config.data_root)
+    loader = DataLoader(dataset, batch_size=1)
 
-# -------------------------
-# 3️⃣  TEST DATASET LOADER
-# -------------------------
+    for i, (person, cloth) in enumerate(loader):
+        person = person.to(Config.device)
+        cloth = cloth.to(Config.device)
 
-def load_images(person_path, cloth_path):
-    transform = transforms.Compose([
-        transforms.Resize((256, 192)),
-        transforms.ToTensor(),
-    ])
+        seg_mask = seg_net(person)
+        cloth_mask = cloth_net(cloth)
 
-    person = Image.open(person_path).convert("RGB")
-    cloth = Image.open(cloth_path).convert("RGB")
+        output = model(torch.cat([person, cloth], dim=1))
+        result = composite(person, output, seg_mask)
 
-    person = transform(person)
-    cloth = transform(cloth)
-
-    input = torch.cat([person, cloth], dim=0).unsqueeze(0)  # Add batch dim
-
-    return input.to(Config.device)
-
-
-# -------------------------
-# 4️⃣  INFERENCE LOGIC
-# -------------------------
-
-def test():
-    model = load_model()
-
-    persons = sorted(os.listdir(os.path.join(Config.test_data, "person")))
-    clothes = sorted(os.listdir(os.path.join(Config.test_data, "clothes")))
-
-    for idx, person_name in enumerate(persons):
-        person_path = os.path.join(Config.test_data, "person", person_name)
-        cloth_path = os.path.join(Config.test_data, "clothes", clothes[idx % len(clothes)])  # cycle clothes
-
-        input = load_images(person_path, cloth_path)
-
-        with torch.no_grad():
-            output = model(input).squeeze(0).cpu()
-
-        output_img = transforms.ToPILImage()(output)
-        save_path = os.path.join(Config.output_dir, f"tryon_{idx}.png")
-        output_img.save(save_path)
-
-        print(f"Saved: {save_path}")
-
-    print("✅ Testing complete! Check your outputs folder.")
-
-
-# -------------------------
-# 5️⃣  ENTRY POINT
-# -------------------------
+        save_image(result.squeeze(), f"results/output_{i}.png")
 
 if __name__ == "__main__":
-    test()
+    main()

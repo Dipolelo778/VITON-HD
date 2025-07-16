@@ -1,8 +1,6 @@
-# loader.py
-
 import os
 from PIL import Image
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from torchvision import transforms
 
 class VITONDataset(Dataset):

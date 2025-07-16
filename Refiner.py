@@ -1,15 +1,26 @@
 # refiner.py
 
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
-class Refiner(nn.Module):
-    def __init__(self):
-        super(Refiner, self).__init__()
-        self.net = nn.Sequential(
-            nn.Conv2d(3, 64, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(64, 3, 3, padding=1)
+class ResidualBlock(nn.Module):
+    def __init__(self, channels):
+        super(ResidualBlock, self).__init__()
+        self.block = nn.Sequential(
+            nn.Conv2d(channels, channels, 3, padding=1),
+            nn.InstanceNorm2d(channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(channels, channels, 3, padding=1),
+            nn.InstanceNorm2d(channels)
         )
 
     def forward(self, x):
-        return self.net(x)
+        return x + self.block(x)
+
+class RefineUNet(nn.Module):
+    def __init__(self):
+        super(RefineUNet, self).__init__()
+        self.enc1 = nn
+
+

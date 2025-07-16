@@ -1,5 +1,3 @@
-# cloth_parser.py
-
 import torch
 import torch.nn as nn
 

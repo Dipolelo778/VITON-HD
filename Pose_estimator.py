@@ -1,33 +1,27 @@
 # pose_estimator.py
 
-import cv2
 import mediapipe as mp
-import numpy as np
+import cv2
+import json
 
-class PoseEstimator:
-    def __init__(self):
-        self.mp_pose = mp.solutions.pose
-        self.pose = self.mp_pose.Pose(static_image_mode=True)
+mp_pose = mp.solutions.pose
 
-    def get_keypoints(self, image_path):
-        """
-        Takes image path → returns normalized keypoints array.
-        """
-        image = cv2.imread(image_path)
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        results = self.pose.process(image_rgb)
+def extract_pose(image_path, output_json):
+    image = cv2.imread(image_path)
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
+    with mp_pose.Pose(static_image_mode=True) as pose:
+        results = pose.process(image_rgb)
         keypoints = []
+
         if results.pose_landmarks:
-            for landmark in results.pose_landmarks.landmark:
-                keypoints.append([landmark.x, landmark.y, landmark.z, landmark.visibility])
-            keypoints = np.array(keypoints)
-        else:
-            keypoints = np.zeros((33, 4))  # 33 pose keypoints
+            for lm in results.pose_landmarks.landmark:
+                keypoints.append({
+                    "x": lm.x,
+                    "y": lm.y,
+                    "z": lm.z,
+                    "visibility": lm.visibility
+                })
 
-        return keypoints
-
-if __name__ == "__main__":
-    pe = PoseEstimator()
-    kpts = pe.get_keypoints("./sample_person.jpg")
-    print(kpts)
+    with open(output_json, "w") as f:
+        json.dump(keypoints, f)

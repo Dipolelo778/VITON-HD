@@ -1,37 +1,64 @@
 # test.py
 
 import torch
-from loader import VITONDataset
-from torch.utils.data import DataLoader
-from network import GeneratorUNet
-from segmentation import SegmentationNet
+from loader import load_image, save_image
 from cloth_parser import ClothParser
-from composite import composite
-from export import save_image
-from config import Config
+from segmentation import HumanParser
+from pose_estimator import PoseEstimator
+from gmm import GeometricMatchingModule
+from refiner import RefinerUNet
+
+import config
 
 def main():
-    model = GeneratorUNet().to(Config.device)
-    seg_net = SegmentationNet().to(Config.device)
-    cloth_net = ClothParser().to(Config.device)
+    # -----------------------
+    # Load models
+    # -----------------------
+    cloth_parser = ClothParser().to(config.device).eval()
+    human_parser = HumanParser().to(config.device).eval()
+    pose_estimator = PoseEstimator().to(config.device).eval()
+    gmm = GeometricMatchingModule().to(config.device).eval()
+    refiner = RefinerUNet().to(config.device).eval()
 
-    model.load_state_dict(torch.load("checkpoints/model_final.pth"))
-    model.eval()
+    # -----------------------
+    # Load input images
+    # -----------------------
+    person_img = load_image("inputs/person.jpg").to(config.device)  # [1, 3, H, W]
+    cloth_img = load_image("inputs/cloth.jpg").to(config.device)    # [1, 3, H, W]
 
-    dataset = VITONDataset(Config.data_root)
-    loader = DataLoader(dataset, batch_size=1)
+    # -----------------------
+    # Step 1: Parse cloth
+    # -----------------------
+    cloth_mask = cloth_parser(cloth_img)
 
-    for i, (person, cloth) in enumerate(loader):
-        person = person.to(Config.device)
-        cloth = cloth.to(Config.device)
+    # -----------------------
+    # Step 2: Parse person
+    # -----------------------
+    person_mask = human_parser(person_img)
 
-        seg_mask = seg_net(person)
-        cloth_mask = cloth_net(cloth)
+    # -----------------------
+    # Step 3: Detect pose
+    # -----------------------
+    pose = pose_estimator(person_img)
 
-        output = model(torch.cat([person, cloth], dim=1))
-        result = composite(person, output, seg_mask)
+    # -----------------------
+    # Step 4: Warp cloth with GMM
+    # -----------------------
+    warped_cloth = gmm(cloth_img, cloth_mask, pose)
 
-        save_image(result.squeeze(), f"results/output_{i}.png")
+    # -----------------------
+    # Step 5: Refine try-on output
+    # -----------------------
+    output = refiner(person_img, warped_cloth, person_mask)
+
+    # -----------------------
+    # Save result
+    # -----------------------
+    save_image(output, "outputs/tryon_result.jpg")
+
+    print("✅ Try-On complete → saved to outputs/tryon_result.jpg")
 
 if __name__ == "__main__":
     main()
+    
+

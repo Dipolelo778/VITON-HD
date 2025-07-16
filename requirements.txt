@@ -6,3 +6,4 @@ Pillow
 scipy
 matplotlib
 tqdm
+mediapipe

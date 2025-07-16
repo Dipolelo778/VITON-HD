@@ -2,26 +2,27 @@
 
 import mediapipe as mp
 import cv2
-import json
+import numpy as np
 
 mp_pose = mp.solutions.pose
 
-def extract_pose(image_path, output_json):
-    image = cv2.imread(image_path)
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+class PoseEstimator:
+    def __init__(self):
+        self.pose = mp_pose.Pose(static_image_mode=True)
 
-    with mp_pose.Pose(static_image_mode=True) as pose:
-        results = pose.process(image_rgb)
-        keypoints = []
+    def __call__(self, image_tensor):
+        # convert tensor to numpy
+        image_np = image_tensor.squeeze().permute(1, 2, 0).cpu().numpy()
+        image_np = (image_np * 255).astype(np.uint8)
+
+        results = self.pose.process(image_np)
+
+        pose_map = np.zeros_like(image_np[..., 0], dtype=np.float32)
 
         if results.pose_landmarks:
             for lm in results.pose_landmarks.landmark:
-                keypoints.append({
-                    "x": lm.x,
-                    "y": lm.y,
-                    "z": lm.z,
-                    "visibility": lm.visibility
-                })
+                cx, cy = int(lm.x * pose_map.shape[1]), int(lm.y * pose_map.shape[0])
+                cv2.circle(pose_map, (cx, cy), 4, 1, -1)
 
-    with open(output_json, "w") as f:
-        json.dump(keypoints, f)
+        pose_map = torch.from_numpy(pose_map).unsqueeze(0).unsqueeze(0).float()
+        return pose_map  # [1,1,H,W]

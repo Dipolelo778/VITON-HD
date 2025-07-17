@@ -1,10 +1,10 @@
 # network.py
 
-from segmentation import SegmentationNet
-from cloth_parser import ClothParser
-from gmm import GMM
-from refiner import RefinerUNet
-from inpainting import Inpainter
+from Segmentation import SegmentationNet
+from Cloth_parser import ClothParser
+from Gmm import GMM
+from Refiner import RefinerUNet
+from Inpainting import Inpainter
 
 class VITONHD:
     def __init__(self):

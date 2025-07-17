@@ -1,3 +1,16 @@
+import os
+import torch
+from torch import nn, optim
+from torch.utils.data import DataLoader
+
+from config import Config
+from dataset import VITONDataset
+from segmentation import SegmentationNet
+from pose_estimator import PoseEstimator
+from cloth_parser import ClothParser
+from gmm import GMM
+from refiner import RefinerUNet
+from inpainter import Inpainter
 
 if __name__ == "__main__":
     # ----------------------------
@@ -76,7 +89,7 @@ if __name__ == "__main__":
             # Warping loss
             pixel_loss = pixel_loss_fn(warped_cloth, cloth)
             smooth_loss = smooth_loss_fn(flow_field[:, :, :, 1:], flow_field[:, :, :, :-1]) + \
-                        smooth_loss_fn(flow_field[:, :, 1:, :], flow_field[:, :, :-1, :])
+                          smooth_loss_fn(flow_field[:, :, 1:, :], flow_field[:, :, :-1, :])
 
             total_loss = pixel_loss + 0.1 * smooth_loss
 

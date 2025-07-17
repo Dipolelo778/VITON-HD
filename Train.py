@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from loader import VITONDataset
+from Loader import VITONDataset
 from segmentation import SegmentationNet
 from pose_estimator import PoseEstimator
 from cloth_parser import ClothParser

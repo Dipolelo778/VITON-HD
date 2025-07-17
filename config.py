@@ -1,6 +1,7 @@
 # config.py
 
 import os
+import torch
 
 class Config:
     IMG_HEIGHT = 256

@@ -15,9 +15,6 @@ It uses deep learning models to fit clothes onto human images realistically.
 #  Clone this repository
 git clone https://github.com/Dipolelo778/VITON-HD.git
 
-#  Navigate into the project directory
-cd VITON-HD
-
 #  (Optional) Create a virtual environment
 python -m venv venv
 source venv/bin/activate   # On Linux/macOS

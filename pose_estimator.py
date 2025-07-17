@@ -21,4 +21,4 @@ class PoseEstimator:
                 cv2.circle(pose_map, (cx, cy), 4, 1, -1)
 
         pose_map = torch.from_numpy(pose_map).unsqueeze(0).unsqueeze(0).float()
-        return pose_map  # [1, 1, H, W]
+        return pose_map  # Shape [1, 1, H, W]

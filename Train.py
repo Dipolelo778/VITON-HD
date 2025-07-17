@@ -6,14 +6,14 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from Loader import VITONDataset
-from Segmentation import SegmentationNet
-from Pose_estimator import PoseEstimator
-from Cloth_parser import ClothParser
-from Gmm import GMM
-from Refiner import RefinerUNet
-from Inpainting import Inpainter
-from Config import Config
+from loader import VITONDataset
+from segmentation import SegmentationNet
+from pose_estimator import PoseEstimator
+from cloth_parser import ClothParser
+from gmm import GMM
+from refiner import RefinerUNet
+from inpainting import Inpainter
+from config import Config
 
 # ----------------------------
 # Load dataset

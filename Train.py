@@ -1,19 +1,5 @@
-import os
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader
 
-from loader import VITONDataset
-from segmentation import SegmentationNet
-from pose_estimator import PoseEstimator
-from cloth_parser import ClothParser
-from gmm import GMM
-from refiner import RefinerUNet
-from inpainting import Inpainter
-from config import Config
-
-def main():
+if __name__ == "__main__":
     # ----------------------------
     # Load dataset
     # ----------------------------
@@ -90,7 +76,7 @@ def main():
             # Warping loss
             pixel_loss = pixel_loss_fn(warped_cloth, cloth)
             smooth_loss = smooth_loss_fn(flow_field[:, :, :, 1:], flow_field[:, :, :, :-1]) + \
-                          smooth_loss_fn(flow_field[:, :, 1:, :], flow_field[:, :, :-1, :])
+                        smooth_loss_fn(flow_field[:, :, 1:, :], flow_field[:, :, :-1, :])
 
             total_loss = pixel_loss + 0.1 * smooth_loss
 
@@ -107,10 +93,6 @@ def main():
             torch.save(refiner.state_dict(), f"{Config.CHECKPOINTS}/refiner.pth")
             torch.save(inpainter.state_dict(), f"{Config.CHECKPOINTS}/inpainting.pth")
             print(f"💾 Saved checkpoints at epoch {epoch+1}")
-
-if __name__ == "__main__":
-    main()
-
 
 
 

@@ -5,11 +5,11 @@ import torch
 from torchvision import transforms
 from PIL import Image
 
-from Segmentation import SegmentationNet
-from Pose_estimator import PoseEstimator
-from Gmm import GMM
-from Refiner import RefinerUNet
-from Inpainting import Inpainter
+from segmentation import SegmentationNet
+from pose_estimator import PoseEstimator
+from gmm import GMM
+from refiner import RefinerUNet
+from inpainting import Inpainter
 
 # ----------------------------
 # CONFIG

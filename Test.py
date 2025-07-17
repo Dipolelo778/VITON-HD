@@ -1,4 +1,3 @@
-# test.py
 import torch
 from torchvision import transforms
 from PIL import Image
@@ -16,15 +15,23 @@ from inpainting import Inpainter
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-# ✅ Use Google Drive in Colab? True = YES, False = NO
-USE_GOOGLE_DRIVE = True  # <-- 👈 Switch to False when you run as app!
+# ✅ Use Google Drive if running in Colab
+try:
+    import google.colab
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
 
-if USE_GOOGLE_DRIVE:
-    from google.colab import drive
-    drive.mount('/content/drive')
+USE_GOOGLE_DRIVE = True  # Set to False for local dev
+
+# NOTE: If you're in Colab, mount your Drive in a notebook cell:
+# from google.colab import drive
+# drive.mount('/content/drive')
+
+if USE_GOOGLE_DRIVE and IN_COLAB:
     ROOT_PATH = "/content/drive/MyDrive/VITON_HD"
 else:
-    ROOT_PATH = "."  # local for app/server
+    ROOT_PATH = "."  # Local path
 
 CHECKPOINTS = {
     "segmentation": os.path.join(ROOT_PATH, "checkpoints/segmentation.pth"),
@@ -81,7 +88,7 @@ cloth_tensor = transform(cloth).unsqueeze(0).to(DEVICE)
 
 with torch.no_grad():
     mask = segmentation(person_tensor)
-    pose = pose_estimator(person_tensor.cpu())  # pose_estimator returns CPU tensor
+    pose = pose_estimator(person_tensor.cpu())
     pose = pose.to(DEVICE)
 
     warped_cloth, _ = gmm(person_tensor, pose, mask, cloth_tensor)
